@@ -52,7 +52,7 @@ public class UserService(
         {
             logger.LogInformation("Getting user email for userId: {UserId}", userId);
             
-            var response = await httpClient.GetAsync($"{awsConfiguration.UserServiceBaseUrl}/api/Users/GetById?id={userId}");
+            var response = await httpClient.GetAsync($"{awsConfiguration.UserServiceBaseUrl}/api/Users/GetById/{userId}");
 
             if (response.IsSuccessStatusCode)
             {
