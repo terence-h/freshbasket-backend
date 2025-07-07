@@ -10,7 +10,10 @@ public class ProductRepository(IDynamoDBContext dynamoDbContext, ILogger<Product
     {
         try
         {
-            return await dynamoDbContext.LoadAsync<Product>(id);
+            // Query all items with this ID (across all categories)
+            var search = dynamoDbContext.QueryAsync<Product>(id);
+            var results = await search.GetNextSetAsync();
+            return results.FirstOrDefault();
         }
         catch (Exception ex)
         {
@@ -79,17 +82,17 @@ public class ProductRepository(IDynamoDBContext dynamoDbContext, ILogger<Product
     {
         try
         {
-            var scanConditions = new List<ScanCondition>
-            {
-                new("CategoryId", ScanOperator.Equal, categoryId)
-            };
-
-            var search = dynamoDbContext.ScanAsync<Product>(scanConditions);
+            var search = dynamoDbContext.QueryAsync<Product>(
+                categoryId,
+                new DynamoDBOperationConfig 
+                { 
+                    IndexName = "CategoryId-index" 
+                });
             return await search.GetRemainingAsync();
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error getting products by category {CategoryId}", categoryId);
+            logger.LogError(ex, "Error getting products by CategoryId {CategoryId}", categoryId);
             throw;
         }
     }

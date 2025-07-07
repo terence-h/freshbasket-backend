@@ -9,7 +9,7 @@ public class Product
     [DynamoDBHashKey]
     public string Id { get; set; } = Guid.NewGuid().ToString();
     
-    [DynamoDBProperty]
+    [DynamoDBRangeKey]
     [DynamoDBGlobalSecondaryIndexHashKey("CategoryId-index")]
     public int CategoryId { get; set; }
 
