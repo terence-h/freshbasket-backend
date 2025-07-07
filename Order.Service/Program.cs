@@ -18,21 +18,30 @@ Console.WriteLine("=== BUILDER CREATED ===");
 // Add configuration
 builder.Services.Configure<AwsConfiguration>(options =>
 {
-    options.OrderProcessingQueueUrl = Environment.GetEnvironmentVariable("SQS_QUEUE_URL") ?? throw new InvalidOperationException("SQS_QUEUE_URL is required");
-    options.OrderNotificationQueueUrl = Environment.GetEnvironmentVariable("SNS_QUEUE_URL") ?? throw new InvalidOperationException("SNS_QUEUE_URL is required");
-    options.OrderNotificationTopicArn = Environment.GetEnvironmentVariable("SNS_TOPIC_ARN") ?? throw new InvalidOperationException("SNS_TOPIC_ARN is required");
-    options.UserServiceBaseUrl = Environment.GetEnvironmentVariable("USER_SERVICE_BASE_URL") ?? throw new InvalidOperationException("USER_SERVICE_BASE_URL is required");
+    Console.WriteLine($"SQS Queue URL: {Environment.GetEnvironmentVariable("SQS_QUEUE_URL")}");
+    Console.WriteLine($"SNS Queue URL: {Environment.GetEnvironmentVariable("SNS_QUEUE_URL")}");
+    Console.WriteLine($"SNS Topic ARN: {Environment.GetEnvironmentVariable("SNS_TOPIC_ARN")}");
+    Console.WriteLine($"User Service URL: {Environment.GetEnvironmentVariable("USER_SERVICE_BASE_URL")}");
+    
+    options.OrderProcessingQueueUrl = Environment.GetEnvironmentVariable("SQS_QUEUE_URL") ??
+                                      throw new InvalidOperationException("SQS_QUEUE_URL is required");
+    options.OrderNotificationQueueUrl = Environment.GetEnvironmentVariable("SNS_QUEUE_URL") ??
+                                        throw new InvalidOperationException("SNS_QUEUE_URL is required");
+    options.OrderNotificationTopicArn = Environment.GetEnvironmentVariable("SNS_TOPIC_ARN") ??
+                                        throw new InvalidOperationException("SNS_TOPIC_ARN is required");
+    options.UserServiceBaseUrl = Environment.GetEnvironmentVariable("USER_SERVICE_BASE_URL") ??
+                                 throw new InvalidOperationException("USER_SERVICE_BASE_URL is required");
 });
 
 Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
 Console.WriteLine("=== CONFIGURATION LOADED ===");
 
 // Configure AWS services - ECS provides credentials and region automatically
-try 
+try
 {
     var awsRegion = Environment.GetEnvironmentVariable("AWS_REGION") ?? "us-east-1";
     Console.WriteLine($"AWS Region: {awsRegion}");
-    
+
     // Add AWS services
     builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
     builder.Services.AddAWSService<IAmazonDynamoDB>();
@@ -63,15 +72,26 @@ builder.Services.AddScoped<IUserService, UserService>();
 
 Console.WriteLine("=== CUSTOM SERVICES REGISTERED ===");
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Order Microservice API", Version = "v1" });
-    
+
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
+        Description =
+            "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
@@ -97,18 +117,6 @@ Console.WriteLine("=== SWAGGER CONFIGURED ===");
 
 builder.Services.AddHealthChecks();
 Console.WriteLine("=== HEALTH CHECKS ADDED ===");
-
-// Add CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-});
-
 Console.WriteLine("=== CORS CONFIGURED ===");
 
 Console.WriteLine("=== BUILDING APPLICATION ===");
@@ -126,8 +134,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseCors("AllowAll");
 app.UseRouting();
-app.UseCors();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
@@ -137,7 +145,7 @@ app.MapGet("/", () => "Order Microservice is running!");
 Console.WriteLine("=== STARTING APPLICATION ===");
 Console.WriteLine($"Listening on: http://+:8080");
 
-try 
+try
 {
     app.Run();
 }

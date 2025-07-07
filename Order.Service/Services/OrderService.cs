@@ -36,9 +36,6 @@ public class OrderService(
             Status = "Pending"
         };
 
-        // Mock payment processing
-        await ProcessPaymentAsync(order.TotalAmount);
-
         // Save order
         var createdOrder = await orderRepository.CreateAsync(order);
 
@@ -169,20 +166,5 @@ public class OrderService(
     {
         var orders = await orderRepository.GetAllAsync();
         return orders.Select(o => o.ToResponseDto()).ToList();
-    }
-
-    // Mock payment processing
-    private async Task ProcessPaymentAsync(decimal amount)
-    {
-        // Simulate payment processing delay
-        await Task.Delay(500);
-
-        // Mock payment success (you could add random failures for testing)
-        var success = true; // Random.Shared.NextDouble() > 0.1; // 90% success rate
-
-        if (!success)
-        {
-            throw new InvalidOperationException("Payment processing failed");
-        }
     }
 }
