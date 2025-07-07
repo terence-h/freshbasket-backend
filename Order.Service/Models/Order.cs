@@ -1,39 +1,35 @@
 ﻿using Amazon.DynamoDBv2.DataModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace Product.Service.Models;
+namespace Order.Service.Models;
 
-[DynamoDBTable("Products")]
-public class Product
+[DynamoDBTable("Orders")]
+public class Order
 {
     [DynamoDBHashKey]
     public string Id { get; set; } = Guid.NewGuid().ToString();
-    
-    [DynamoDBProperty]
-    [DynamoDBGlobalSecondaryIndexHashKey("CategoryId-index")]
-    public int CategoryId { get; set; }
 
     [DynamoDBProperty]
     [Required]
-    public string Name { get; set; } = string.Empty;
+    public string UserId { get; set; } = string.Empty;
 
     [DynamoDBProperty]
     [Required]
-    public string Description { get; set; } = string.Empty;
+    public string Products { get; set; } = string.Empty; // JSON string
 
     [DynamoDBProperty]
     [Required]
-    public decimal Price { get; set; }
-
-    [DynamoDBProperty]
-    public decimal? DiscountedPrice { get; set; }
+    public decimal Subtotal { get; set; }
 
     [DynamoDBProperty]
     [Required]
-    public int Quantity { get; set; }
+    public decimal DeliveryFee { get; set; }
 
     [DynamoDBProperty]
-    public string? ImageKey { get; set; }
+    public decimal TotalAmount => Subtotal + DeliveryFee;
+
+    [DynamoDBProperty]
+    public string Status { get; set; } = "Pending"; // Pending, Processing, Shipped, Delivered, Cancelled
 
     [DynamoDBProperty]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -43,8 +43,15 @@ public class ProductService(
         // Store the key if image is uploaded
         if (productDto.Image != null)
         {
-            var uploadResult = await s3Service.UploadImageAsync(productDto.Image);
-            product.ImageKey = uploadResult.Key;
+            try
+            {
+                var uploadResult = await s3Service.UploadImageAsync(productDto.Image);
+                product.ImageKey = uploadResult.Key;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to upload image", ex);
+            }
         }
     
         var createdProduct = await productRepository.CreateAsync(product);
@@ -78,8 +85,15 @@ public class ProductService(
         
         if (productDto.Image != null)
         {
-            var uploadImage = await s3Service.UploadImageAsync(productDto.Image);
-            existingProduct.ImageKey = uploadImage.Key;
+            try
+            {
+                var uploadResult = await s3Service.UploadImageAsync(productDto.Image);
+                existingProduct.ImageKey = uploadResult.Key;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to upload image", ex);
+            }
         }
 
         var updatedProduct = await productRepository.UpdateAsync(existingProduct);
