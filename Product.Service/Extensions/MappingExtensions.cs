@@ -16,7 +16,6 @@ public static class MappingExtensions
             DiscountedPrice = product.DiscountedPrice,
             Quantity = product.Quantity,
             CategoryId = product.CategoryId,
-            ImageUrl = product.ImageUrl,
             CreatedAt = product.CreatedAt,
             UpdatedAt = product.UpdatedAt
         };
@@ -31,8 +30,7 @@ public static class MappingExtensions
             Price = dto.Price,
             DiscountedPrice = dto.DiscountedPrice,
             Quantity = dto.Quantity,
-            CategoryId = dto.CategoryId,
-            ImageUrl = dto.ImageUrl
+            CategoryId = dto.CategoryId
         };
     }
 

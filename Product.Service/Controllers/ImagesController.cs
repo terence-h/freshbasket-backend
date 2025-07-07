@@ -9,7 +9,7 @@ namespace Product.Service.Controllers;
 public class ImagesController(IS3Service s3Service, IAuthService authService, ILogger<ImagesController> logger) : ControllerBase
 {
     [HttpPost("upload")]
-    public async Task<ActionResult<ImageUploadResponseDto>> Upload(IFormFile file)
+    public async Task<ActionResult<ImageUploadResponseDto>> Upload(IFormFile? file)
     {
         try
         {
@@ -30,7 +30,7 @@ public class ImagesController(IS3Service s3Service, IAuthService authService, IL
         catch (Exception ex)
         {
             logger.LogError(ex, "Error uploading image");
-            return StatusCode(500, new { message = "Internal server error" });
+            return StatusCode(500, new { message = "Internal server error: Error uploading image" });
         }
     }
 
@@ -49,7 +49,7 @@ public class ImagesController(IS3Service s3Service, IAuthService authService, IL
         catch (Exception ex)
         {
             logger.LogError(ex, "Error deleting image {FileName}", fileName);
-            return StatusCode(500, new { message = "Internal server error" });
+            return StatusCode(500, new { message = $"Internal server error: Error deleting image {fileName}" });
         }
     }
 

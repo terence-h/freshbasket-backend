@@ -8,8 +8,9 @@ public class Product
 {
     [DynamoDBHashKey]
     public string Id { get; set; } = Guid.NewGuid().ToString();
-
-    [DynamoDBRangeKey]
+    
+    [DynamoDBProperty]
+    [Required]
     public int CategoryId { get; set; }
 
     [DynamoDBProperty]
@@ -32,7 +33,7 @@ public class Product
     public int Quantity { get; set; }
 
     [DynamoDBProperty]
-    public string? ImageUrl { get; set; }
+    public string? ImageKey { get; set; }
 
     [DynamoDBProperty]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

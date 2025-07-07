@@ -6,15 +6,15 @@ using Models;
 
 public class ProductRepository(IDynamoDBContext dynamoDbContext, ILogger<ProductRepository> logger) : IProductRepository
 {
-    public async Task<Product?> GetByIdAsync(string id, int categoryId)
+    public async Task<Product?> GetByIdAsync(string id)
     {
         try
         {
-            return await dynamoDbContext.LoadAsync<Product>(id, categoryId);
+            return await dynamoDbContext.LoadAsync<Product>(id);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error getting product by ID {ProductId}, CategoryId {CategoryId}", id, categoryId);
+            logger.LogError(ex, "Error getting product by ID {ProductId}", id);
             throw;
         }
     }
@@ -48,15 +48,15 @@ public class ProductRepository(IDynamoDBContext dynamoDbContext, ILogger<Product
         }
     }
 
-    public async Task DeleteAsync(string id, int categoryId)
+    public async Task DeleteAsync(string id)
     {
         try
         {
-            await dynamoDbContext.DeleteAsync<Product>(id, categoryId);
+            await dynamoDbContext.DeleteAsync<Product>(id);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error deleting product {ProductId}, CategoryId {CategoryId}", id, categoryId);
+            logger.LogError(ex, "Error deleting product {ProductId}", id);
             throw;
         }
     }

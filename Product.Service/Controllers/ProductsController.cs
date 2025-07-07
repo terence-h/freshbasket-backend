@@ -23,16 +23,16 @@ public class ProductsController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error getting all products");
-            return StatusCode(500, new { message = "Internal server error" });
+            return StatusCode(500, new { message = $"Internal server error: Error getting all products" });
         }
     }
 
-    [HttpGet("{id}/{categoryId}")]
-    public async Task<ActionResult<ProductResponseDto>> GetById(string id, int categoryId)
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ProductResponseDto>> GetById(string id)
     {
         try
         {
-            var product = await productService.GetByIdAsync(id, categoryId);
+            var product = await productService.GetByIdAsync(id);
             if (product == null)
                 return NotFound(new { message = "Product not found" });
 
@@ -40,8 +40,8 @@ public class ProductsController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error getting product {ProductId}, {CategoryId}", id, categoryId);
-            return StatusCode(500, new { message = "Internal server error" });
+            logger.LogError(ex, "Error getting product {ProductId}", id);
+            return StatusCode(500, new { message = $"Internal server error: Error getting product {id}" });
         }
     }
 
@@ -56,7 +56,7 @@ public class ProductsController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error getting products for category {CategoryId}", categoryId);
-            return StatusCode(500, new { message = "Internal server error" });
+            return StatusCode(500, new { message = $"Internal server error: Error getting products for category {categoryId}" });
         }
     }
 
@@ -83,12 +83,12 @@ public class ProductsController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error creating product");
-            return StatusCode(500, new { message = "Internal server error" });
+            return StatusCode(500, new { message = "Internal server error: Error creating product" });
         }
     }
 
-    [HttpPut("{id}/{categoryId}")]
-    public async Task<ActionResult<ProductResponseDto>> Update(string id, int categoryId, [FromBody] ProductUpdateDto productDto)
+    [HttpPut("{id}")]
+    public async Task<ActionResult<ProductResponseDto>> Update(string id, [FromBody] ProductUpdateDto productDto)
     {
         try
         {
@@ -99,7 +99,7 @@ public class ProductsController(
             if (!await IsAdmin())
                 return BadRequest(new { message = "Admin access required" });
 
-            var updatedProduct = await productService.UpdateAsync(id, categoryId, productDto);
+            var updatedProduct = await productService.UpdateAsync(id, productDto);
             return Ok(updatedProduct);
         }
         catch (KeyNotFoundException ex)
@@ -108,13 +108,13 @@ public class ProductsController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error updating product {ProductId}, {CategoryId}", id, categoryId);
-            return StatusCode(500, new { message = "Internal server error" });
+            logger.LogError(ex, "Error updating product {ProductId}", id);
+            return StatusCode(500, new { message = $"Internal server error: Error updating product {id}" });
         }
     }
 
-    [HttpDelete("{id}/{categoryId}")]
-    public async Task<IActionResult> Delete(string id, int categoryId)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(string id)
     {
         try
         {
@@ -122,7 +122,7 @@ public class ProductsController(
             if (!await IsAdmin())
                 return BadRequest(new { message = "Admin access required" });
 
-            await productService.DeleteAsync(id, categoryId);
+            await productService.DeleteAsync(id);
             return NoContent();
         }
         catch (KeyNotFoundException ex)
@@ -131,8 +131,8 @@ public class ProductsController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error deleting product {ProductId}, {CategoryId}", id, categoryId);
-            return StatusCode(500, new { message = "Internal server error" });
+            logger.LogError(ex, "Error deleting product {ProductId}", id);
+            return StatusCode(500, new { message = $"Internal server error: Error deleting product {id}" });
         }
     }
 

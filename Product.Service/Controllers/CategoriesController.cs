@@ -23,7 +23,7 @@ public class CategoriesController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error getting all categories");
-            return StatusCode(500, new { message = "Internal server error" });
+            return StatusCode(500, new { message = "Internal server error: Error getting all categories" });
         }
     }
 
@@ -41,7 +41,7 @@ public class CategoriesController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error getting category {CategoryId}", id);
-            return StatusCode(500, new { message = "Internal server error" });
+            return StatusCode(500, new { message = $"Internal server error: Error getting category {id}" });
         }
     }
 
@@ -63,7 +63,7 @@ public class CategoriesController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error creating category");
-            return StatusCode(500, new { message = "Internal server error" });
+            return StatusCode(500, new { message = "Internal server error: Error creating category" });
         }
     }
 
@@ -89,7 +89,7 @@ public class CategoriesController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error updating category {CategoryId}", id);
-            return StatusCode(500, new { message = "Internal server error" });
+            return StatusCode(500, new { message = $"Internal server error: Error updating category {id}" });
         }
     }
 
@@ -112,7 +112,7 @@ public class CategoriesController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error deleting category {CategoryId}", id);
-            return StatusCode(500, new { message = "Internal server error" });
+            return StatusCode(500, new { message = $"Internal server error: Error deleting category {id}" });
         }
     }
 

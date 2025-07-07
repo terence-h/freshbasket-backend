@@ -22,6 +22,9 @@ public class ProductUpdateDto
     [Required]
     [Range(0, int.MaxValue, ErrorMessage = "Quantity must be non-negative")]
     public int Quantity { get; set; }
-
-    public string? ImageUrl { get; set; }
+    
+    [Required]
+    public int CategoryId { get; set; }
+    
+    public IFormFile? Image { get; set; }
 }

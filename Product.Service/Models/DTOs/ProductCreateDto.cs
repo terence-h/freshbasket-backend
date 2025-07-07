@@ -25,6 +25,6 @@ public class ProductCreateDto
 
     [Required]
     public int CategoryId { get; set; }
-
-    public string? ImageUrl { get; set; }
+    
+    public IFormFile? Image { get; set; }
 }

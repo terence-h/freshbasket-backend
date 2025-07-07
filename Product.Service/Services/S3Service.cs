@@ -24,7 +24,7 @@ public class S3Service(IAmazonS3 s3Client, IOptions<AwsConfiguration> config, IL
             var key = $"products/{Guid.NewGuid()}{fileExtension}";
 
             // Upload to S3
-            using var stream = file.OpenReadStream();
+            await using var stream = file.OpenReadStream();
             var request = new PutObjectRequest
             {
                 BucketName = _config.S3BucketName,
@@ -100,8 +100,8 @@ public class S3Service(IAmazonS3 s3Client, IOptions<AwsConfiguration> config, IL
         if (file == null || file.Length == 0)
             throw new ArgumentException("File is required");
 
-        if (file.Length > 5 * 1024 * 1024) // 5MB limit
-            throw new ArgumentException("File size must be less than 5MB");
+        if (file.Length > 2 * 1024 * 1024) // 2MB limit
+            throw new ArgumentException("File size must be less than 2MB");
 
         var extension = Path.GetExtension(file.FileName).ToLower();
         if (!_allowedExtensions.Contains(extension))
