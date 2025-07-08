@@ -71,6 +71,29 @@ public class ProductsController(
             // Simple admin check using Authorization header
             if (!await IsAdmin())
                 return BadRequest(new { message = "Admin access required" });
+            
+            logger.LogInformation("=== CONTROLLER RECEIVE DEBUG ===");
+            logger.LogInformation($"ModelState.IsValid: {ModelState.IsValid}");
+        
+            if (productDto.Image != null)
+            {
+                logger.LogInformation($"Received image in controller:");
+                logger.LogInformation($" - FileName: {productDto.Image.FileName}");
+                logger.LogInformation($" - Length: {productDto.Image.Length}");
+                logger.LogInformation($" - ContentType: {productDto.Image.ContentType}");
+                logger.LogInformation($" - ContentDisposition: {productDto.Image.ContentDisposition}");
+            
+                // Test if we can read the stream at controller level
+                await using var testRead = productDto.Image.OpenReadStream();
+                var buffer = new byte[100];
+                var bytesRead = await testRead.ReadAsync(buffer, 0, buffer.Length);
+                logger.LogInformation($"Controller level read test - bytes read: {bytesRead}");
+                logger.LogInformation($"First 20 bytes at controller: {Convert.ToHexString(buffer.Take(20).ToArray())}");
+            }
+            else
+            {
+                logger.LogWarning("No image received in controller");
+            }
 
             var createdProduct = await productService.CreateAsync(productDto);
             return CreatedAtAction(nameof(GetById), 
