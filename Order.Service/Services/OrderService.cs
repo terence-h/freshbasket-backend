@@ -105,7 +105,7 @@ public class OrderService(
         {
             try
             {
-                var userEmail = await userService.GetUserEmailAsync(order.UserId);
+                var userEmail = "fake.email@fake.com"; // await userService.GetUserEmailAsync(order.UserId);
                 if (!string.IsNullOrEmpty(userEmail))
                 {
                     await snsService.SendOrderStatusUpdateEmailAsync(order.Id, userEmail, status);

@@ -62,7 +62,7 @@ public class SnsService(
         try
         {
             var emailSubject = $"Order Status Update - Order #{orderId}";
-            var emailBody = BuildOrderStatusUpdateEmailPlainText(orderId, status); // ✅ Changed to plain text
+            var emailBody = BuildOrderStatusUpdateEmailPlainText(orderId, status);
 
             var publishRequest = new PublishRequest
             {
