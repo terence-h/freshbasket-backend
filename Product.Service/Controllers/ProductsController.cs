@@ -56,52 +56,45 @@ public class ProductsController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error getting products for category {CategoryId}", categoryId);
-            return StatusCode(500, new { message = $"Internal server error: Error getting products for category {categoryId}" });
+            return StatusCode(500,
+                new { message = $"Internal server error: Error getting products for category {categoryId}" });
         }
     }
 
     [HttpPost]
-    public async Task<ActionResult<ProductResponseDto>> Create([FromForm] ProductCreateDto productDto)
+    [RequestSizeLimit(100_000_000)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 100_000_000)]
+    public async Task<ActionResult<ProductResponseDto>> Create(
+        [FromForm] string name,
+        [FromForm] string description,
+        [FromForm] decimal price,
+        [FromForm] decimal? discountedPrice,
+        [FromForm] int quantity,
+        [FromForm] int categoryId,
+        IFormFile? image)
     {
         try
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+            
+            var productDto = new ProductCreateDto
+            {
+                Name = name,
+                Description = description,
+                Price = price,
+                DiscountedPrice = discountedPrice,
+                Quantity = quantity,
+                CategoryId = categoryId,
+                Image = image
+            };
 
-            // Simple admin check using Authorization header
             if (!await IsAdmin())
                 return BadRequest(new { message = "Admin access required" });
-            
-            logger.LogInformation("=== CONTROLLER RECEIVE DEBUG ===");
-            logger.LogInformation($"ModelState.IsValid: {ModelState.IsValid}");
-        
-            if (productDto.Image != null)
-            {
-                logger.LogInformation($"Received image in controller:");
-                logger.LogInformation($" - FileName: {productDto.Image.FileName}");
-                logger.LogInformation($" - Length: {productDto.Image.Length}");
-                logger.LogInformation($" - ContentType: {productDto.Image.ContentType}");
-                logger.LogInformation($" - ContentDisposition: {productDto.Image.ContentDisposition}");
-            
-                // Test if we can read the stream at controller level
-                await using var testRead = productDto.Image.OpenReadStream();
-                var buffer = new byte[100];
-                var bytesRead = await testRead.ReadAsync(buffer, 0, buffer.Length);
-                logger.LogInformation($"Controller level read test - bytes read: {bytesRead}");
-                logger.LogInformation($"First 20 bytes at controller: {Convert.ToHexString(buffer.Take(20).ToArray())}");
-            }
-            else
-            {
-                logger.LogWarning("No image received in controller");
-            }
 
             var createdProduct = await productService.CreateAsync(productDto);
-            return CreatedAtAction(nameof(GetById), 
+            return CreatedAtAction(nameof(GetById),
                 new { id = createdProduct.Id, categoryId = createdProduct.CategoryId }, createdProduct);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
