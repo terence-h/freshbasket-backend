@@ -62,32 +62,12 @@ public class ProductsController(
     }
 
     [HttpPost]
-    [RequestSizeLimit(100_000_000)]
-    [RequestFormLimits(MultipartBodyLengthLimit = 100_000_000)]
-    public async Task<ActionResult<ProductResponseDto>> Create(
-        [FromForm] string name,
-        [FromForm] string description,
-        [FromForm] decimal price,
-        [FromForm] decimal? discountedPrice,
-        [FromForm] int quantity,
-        [FromForm] int categoryId,
-        IFormFile? image)
+    public async Task<ActionResult<ProductResponseDto>> Create([FromForm] ProductCreateDto productDto)
     {
         try
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            
-            var productDto = new ProductCreateDto
-            {
-                Name = name,
-                Description = description,
-                Price = price,
-                DiscountedPrice = discountedPrice,
-                Quantity = quantity,
-                CategoryId = categoryId,
-                Image = image
-            };
 
             if (!await IsAdmin())
                 return BadRequest(new { message = "Admin access required" });

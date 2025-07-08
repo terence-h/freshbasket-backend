@@ -1,4 +1,6 @@
-﻿namespace Product.Service.Repositories;
+﻿using Amazon.DynamoDBv2.Model;
+
+namespace Product.Service.Repositories;
 
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
@@ -55,7 +57,17 @@ public class ProductRepository(IDynamoDBContext dynamoDbContext, ILogger<Product
     {
         try
         {
-            await dynamoDbContext.DeleteAsync<Product>(id);
+            var product = await GetByIdAsync(id);
+            if (product == null)
+            {
+                logger.LogWarning("Product {ProductId} not found for deletion", id);
+                // return; // or throw NotFoundException
+                throw new IndexNotFoundException($"Product {id} not found for deletion");
+            }
+            
+            await dynamoDbContext.DeleteAsync<Product>(id, product.CategoryId);
+
+            logger.LogInformation("Successfully deleted product {ProductId}", id);
         }
         catch (Exception ex)
         {
@@ -84,9 +96,9 @@ public class ProductRepository(IDynamoDBContext dynamoDbContext, ILogger<Product
         {
             var search = dynamoDbContext.QueryAsync<Product>(
                 categoryId,
-                new DynamoDBOperationConfig 
-                { 
-                    IndexName = "CategoryId-index" 
+                new DynamoDBOperationConfig
+                {
+                    IndexName = "CategoryId-index"
                 });
             return await search.GetRemainingAsync();
         }
