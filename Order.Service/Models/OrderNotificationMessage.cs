@@ -1,4 +1,6 @@
-﻿namespace Order.Service.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace Order.Service.Models;
 
 public class OrderNotificationMessage
 {
@@ -9,4 +11,7 @@ public class OrderNotificationMessage
     public DateTime OrderDate { get; set; }
     public string Status { get; set; } = string.Empty;
     public List<OrderProductMessage> Products { get; set; } = new();
+    
+    [JsonIgnore]
+    public string ReceiptHandle { get; set; } = string.Empty;
 }

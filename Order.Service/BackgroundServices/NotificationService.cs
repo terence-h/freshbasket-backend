@@ -28,11 +28,29 @@ public class NotificationService(IServiceProvider serviceProvider, ILogger<Notif
 
                         if (success)
                         {
-                            logger.LogInformation("Successfully sent notification for order {OrderId}", notification.OrderId);
+                            // Delete message
+                            var deleted = await sqsService.DeleteMessageAsync(
+                                Environment.GetEnvironmentVariable("SNS_QUEUE_URL")!,
+                                notification.ReceiptHandle
+                            );
+
+                            if (deleted)
+                            {
+                                logger.LogInformation(
+                                    "Successfully sent notification and deleted message for order {OrderId}",
+                                    notification.OrderId);
+                            }
+                            else
+                            {
+                                logger.LogWarning("Sent notification for order {OrderId} but failed to delete message",
+                                    notification.OrderId);
+                            }
                         }
                         else
                         {
-                            logger.LogWarning("Failed to send notification for order {OrderId}", notification.OrderId);
+                            logger.LogWarning(
+                                "Failed to send notification for order {OrderId} - message will be retried",
+                                notification.OrderId);
                         }
                     }
                     catch (Exception ex)

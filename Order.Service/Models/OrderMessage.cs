@@ -1,4 +1,6 @@
-﻿namespace Order.Service.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace Order.Service.Models;
 
 public class OrderMessage
 {
@@ -8,6 +10,9 @@ public class OrderMessage
     public decimal TotalAmount { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<OrderProductMessage> Products { get; set; } = new();
+    
+    [JsonIgnore]
+    public string ReceiptHandle { get; set; } = string.Empty;
 }
 
 public class OrderProductMessage

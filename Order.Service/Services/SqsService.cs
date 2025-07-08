@@ -17,7 +17,7 @@ public class SqsService(IAmazonSQS sqsClient, IOptions<AwsConfiguration> awsConf
         try
         {
             var messageBody = JsonSerializer.Serialize(orderMessage);
-            
+
             var request = new SendMessageRequest
             {
                 QueueUrl = awsConfiguration.OrderProcessingQueueUrl,
@@ -44,10 +44,10 @@ public class SqsService(IAmazonSQS sqsClient, IOptions<AwsConfiguration> awsConf
             };
 
             var response = await sqsClient.SendMessageAsync(request);
-            
-            logger.LogInformation("Order {OrderId} sent to processing queue. MessageId: {MessageId}", 
+
+            logger.LogInformation("Order {OrderId} sent to processing queue. MessageId: {MessageId}",
                 orderMessage.OrderId, response.MessageId);
-            
+
             return !string.IsNullOrEmpty(response.MessageId);
         }
         catch (Exception ex)
@@ -62,7 +62,7 @@ public class SqsService(IAmazonSQS sqsClient, IOptions<AwsConfiguration> awsConf
         try
         {
             var messageBody = JsonSerializer.Serialize(notificationMessage);
-            
+
             var request = new SendMessageRequest
             {
                 QueueUrl = awsConfiguration.OrderNotificationQueueUrl,
@@ -89,15 +89,16 @@ public class SqsService(IAmazonSQS sqsClient, IOptions<AwsConfiguration> awsConf
             };
 
             var response = await sqsClient.SendMessageAsync(request);
-            
-            logger.LogInformation("Notification for order {OrderId} sent to notification queue. MessageId: {MessageId}", 
+
+            logger.LogInformation("Notification for order {OrderId} sent to notification queue. MessageId: {MessageId}",
                 notificationMessage.OrderId, response.MessageId);
-            
+
             return !string.IsNullOrEmpty(response.MessageId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send notification for order {OrderId} to queue", notificationMessage.OrderId);
+            logger.LogError(ex, "Failed to send notification for order {OrderId} to queue",
+                notificationMessage.OrderId);
             return false;
         }
     }
@@ -124,12 +125,16 @@ public class SqsService(IAmazonSQS sqsClient, IOptions<AwsConfiguration> awsConf
                     var orderMessage = JsonSerializer.Deserialize<OrderMessage>(message.Body);
                     if (orderMessage != null)
                     {
+                        // Add ReceiptHandle to the message for deletion later
+                        orderMessage.ReceiptHandle = message.ReceiptHandle;
                         messages.Add(orderMessage);
                     }
                 }
                 catch (JsonException ex)
                 {
                     logger.LogError(ex, "Failed to deserialize order message: {MessageBody}", message.Body);
+                    // Delete malformed messages
+                    await DeleteMessageAsync(awsConfiguration.OrderProcessingQueueUrl, message.ReceiptHandle);
                 }
             }
 
@@ -164,12 +169,16 @@ public class SqsService(IAmazonSQS sqsClient, IOptions<AwsConfiguration> awsConf
                     var notificationMessage = JsonSerializer.Deserialize<OrderNotificationMessage>(message.Body);
                     if (notificationMessage != null)
                     {
+                        // Add ReceiptHandle to the message for deletion later
+                        notificationMessage.ReceiptHandle = message.ReceiptHandle;
                         messages.Add(notificationMessage);
                     }
                 }
                 catch (JsonException ex)
                 {
                     logger.LogError(ex, "Failed to deserialize notification message: {MessageBody}", message.Body);
+                    // Delete malformed messages
+                    await DeleteMessageAsync(awsConfiguration.OrderNotificationQueueUrl, message.ReceiptHandle);
                 }
             }
 
@@ -181,6 +190,7 @@ public class SqsService(IAmazonSQS sqsClient, IOptions<AwsConfiguration> awsConf
             return new List<OrderNotificationMessage>();
         }
     }
+
 
     public async Task<bool> DeleteMessageAsync(string queueUrl, string receiptHandle)
     {

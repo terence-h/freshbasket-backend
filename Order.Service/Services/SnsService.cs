@@ -2,7 +2,6 @@
 using Amazon.SimpleNotificationService.Model;
 using Microsoft.Extensions.Options;
 using Order.Service.Models;
-using System.Text.Json;
 using Order.Service.Models.Configurations;
 
 namespace Order.Service.Services;
@@ -20,23 +19,13 @@ public class SnsService(
         try
         {
             var emailSubject = $"Order Confirmation - Order #{notification.OrderId}";
-            var emailBody = BuildOrderConfirmationEmail(notification);
-
-            var message = new
-            {
-                // default = "Order confirmation",
-                email = new
-                {
-                    Subject = emailSubject,
-                    Body = emailBody,
-                    ToEmail = notification.UserEmail
-                }
-            };
+            var emailBody = BuildOrderConfirmationEmailPlainText(notification);
 
             var publishRequest = new PublishRequest
             {
                 TopicArn = awsConfiguration.OrderNotificationTopicArn,
-                Message = JsonSerializer.Serialize(message),
+                Subject = emailSubject,
+                Message = emailBody,
                 MessageAttributes = new Dictionary<string, MessageAttributeValue>
                 {
                     {
@@ -59,10 +48,6 @@ public class SnsService(
             };
 
             var response = await snsClient.PublishAsync(publishRequest);
-            
-            logger.LogInformation("Order confirmation email sent for order {OrderId}. MessageId: {MessageId}", 
-                notification.OrderId, response.MessageId);
-            
             return !string.IsNullOrEmpty(response.MessageId);
         }
         catch (Exception ex)
@@ -77,23 +62,13 @@ public class SnsService(
         try
         {
             var emailSubject = $"Order Status Update - Order #{orderId}";
-            var emailBody = BuildOrderStatusUpdateEmail(orderId, status);
-
-            var message = new
-            {
-                // default = "Order status update",
-                email = new
-                {
-                    Subject = emailSubject,
-                    Body = emailBody,
-                    ToEmail = userEmail
-                }
-            };
+            var emailBody = BuildOrderStatusUpdateEmailPlainText(orderId, status); // ✅ Changed to plain text
 
             var publishRequest = new PublishRequest
             {
                 TopicArn = awsConfiguration.OrderNotificationTopicArn,
-                Message = JsonSerializer.Serialize(message),
+                Subject = emailSubject,
+                Message = emailBody,
                 MessageAttributes = new Dictionary<string, MessageAttributeValue>
                 {
                     {
@@ -116,10 +91,10 @@ public class SnsService(
             };
 
             var response = await snsClient.PublishAsync(publishRequest);
-            
-            logger.LogInformation("Order status update email sent for order {OrderId}. MessageId: {MessageId}", 
+
+            logger.LogInformation("Order status update email sent for order {OrderId}. MessageId: {MessageId}",
                 orderId, response.MessageId);
-            
+
             return !string.IsNullOrEmpty(response.MessageId);
         }
         catch (Exception ex)
@@ -129,50 +104,49 @@ public class SnsService(
         }
     }
 
-    private static string BuildOrderConfirmationEmail(OrderNotificationMessage notification)
+    private static string BuildOrderConfirmationEmailPlainText(OrderNotificationMessage notification)
     {
-        var productsHtml = string.Join("", notification.Products.Select(p =>
-            $"<li>{p.Name} - Quantity: {p.Quantity} - ${p.TotalPrice:F2}</li>"));
+        var productsText = string.Join("\n", notification.Products.Select(p =>
+            $"• {p.Name} - Quantity: {p.Quantity} - ${p.TotalPrice:F2}"));
 
-        return $@"
-            <html>
-            <body>
-                <h2>Thank you for your order!</h2>
-                <p>Dear {notification.UserName},</p>
-                <p>We've received your order and it's being processed.</p>
-                
-                <h3>Order Details:</h3>
-                <p><strong>Order ID:</strong> {notification.OrderId}</p>
-                <p><strong>Order Date:</strong> {notification.OrderDate:yyyy-MM-dd HH:mm:ss}</p>
-                <p><strong>Status:</strong> {notification.Status}</p>
-                
-                <h3>Items Ordered:</h3>
-                <ul>
-                    {productsHtml}
-                </ul>
-                
-                <p><strong>Total Amount: ${notification.TotalAmount:F2}</strong></p>
-                
-                <p>We'll send you another email when your order ships.</p>
-                <p>Thank you for shopping with us!</p>
-            </body>
-            </html>";
+        return $@"Thank you for your order!
+
+Dear Customer,
+
+We've received your order and it's being processed.
+
+Order Details:
+Order ID: {notification.OrderId}
+Order Date: {notification.OrderDate:yyyy-MM-dd HH:mm:ss}
+Status: {notification.Status}
+
+Items Ordered:
+{productsText}
+
+Total Amount: ${notification.TotalAmount:F2}
+
+We'll send you another email when your order ships.
+Thank you for shopping with Fresh Basket!";
     }
 
-    private static string BuildOrderStatusUpdateEmail(string orderId, string status)
+    private static string BuildOrderStatusUpdateEmailPlainText(string orderId, string status)
     {
-        return $@"
-            <html>
-            <body>
-                <h2>Order Status Update</h2>
-                <p>Your order #{orderId} status has been updated to: <strong>{status}</strong></p>
-                
-                {(status == "Shipped" ? "<p>Your order is on its way! You should receive it soon.</p>" : "")}
-                {(status == "Delivered" ? "<p>Your order has been delivered! We hope you enjoy your purchase.</p>" : "")}
-                {(status == "Cancelled" ? "<p>Your order has been cancelled. If you have any questions, please contact support.</p>" : "")}
-                
-                <p>Thank you for shopping with us!</p>
-            </body>
-            </html>";
+        var statusMessage = status switch
+        {
+            "Shipped" => "Your order is on its way! You should receive it soon.",
+            "Delivered" => "Your order has been delivered! We hope you enjoy your purchase.",
+            "Cancelled" => "Your order has been cancelled. If you have any questions, please contact support.",
+            _ => "Your order status has been updated."
+        };
+
+        return $@"Order Status Update
+
+Your order #{orderId} status has been updated to: {status.ToUpper()}
+
+{statusMessage}
+
+Thank you for shopping with Fresh Basket!
+
+If you have any questions, please contact our support team.";
     }
 }
