@@ -23,18 +23,31 @@ public class S3Service(IAmazonS3 s3Client, IOptions<AwsConfiguration> config, IL
             var fileExtension = Path.GetExtension(file.FileName).ToLower();
             var key = $"products/{Guid.NewGuid()}{fileExtension}";
 
-            // Upload to S3
-            await using var stream = file.OpenReadStream();
+            logger.LogInformation($"Uploading {file.FileName} ({file.Length} bytes) to key: {key}");
+
+            // Read file into memory first
+            await using var inputStream = file.OpenReadStream();
+            using var memoryStream = new MemoryStream();
+            await inputStream.CopyToAsync(memoryStream);
+            memoryStream.Position = 0; // Reset position to beginning
+
+            logger.LogInformation($"Copied to memory stream. Size: {memoryStream.Length}");
+
+            // Upload to S3 using memory stream
             var request = new PutObjectRequest
             {
                 BucketName = _config.S3BucketName,
                 Key = key,
-                InputStream = stream,
+                InputStream = memoryStream,
                 ContentType = file.ContentType,
-                ServerSideEncryptionMethod = ServerSideEncryptionMethod.AES256
+                ServerSideEncryptionMethod = ServerSideEncryptionMethod.AES256,
+                UseChunkEncoding = false,
+                DisablePayloadSigning = false
             };
 
-            await s3Client.PutObjectAsync(request);
+            var response = await s3Client.PutObjectAsync(request);
+
+            logger.LogInformation($"S3 upload completed. Status: {response.HttpStatusCode}, ETag: {response.ETag}");
 
             // Generate pre-signed URL for download
             var downloadUrl = await GetPreSignedDownloadUrlAsync(key);
