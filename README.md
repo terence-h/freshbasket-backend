@@ -8,13 +8,11 @@
 
 # Building/Pushing Docker Image to Amazon ECR
 1. Go to Amazon ECR and create a repository
-<br>
-1.1. **Repository Name**: user-service *(The name will be used in further steps so keep in mind)*
-<br>
-1.2. *(Optional)* Under **Encryption Settings**, use **AWS KMS** if you wish to encrypt using AWS KMS instead of the default AES-256 encryption.
-2. Click on '**Create**'.
-3. Open CloudShell *(bottom left of the browser)*
-4. Run the script below to clone the git repository to CloudShell.
+2. **Repository Name**: user-service *(The name will be used in further steps so keep in mind)*
+3. *(Optional)* Under **Encryption Settings**, use **AWS KMS** if you wish to encrypt using AWS KMS instead of the default AES-256 encryption.
+4. Click on '**Create**'.
+5. Open CloudShell *(bottom left of the browser)*
+6. Run the script below to clone the git repository to CloudShell.
 
 ```
 git clone -b develop https://github.com/terence-h/freshbasket-backend.git
@@ -23,7 +21,7 @@ git clone -b develop https://github.com/terence-h/freshbasket-backend.git
 cd freshbasket-backend/User.Service
 
 ```
-5. In the script provided below, change **ECR_REPO_NAME** to the microservice you. The script will **build the docker image, push the docker image to ECR and clear build images**. This process will take around ~2 minutes.
+7. In the script provided below, change **ECR_REPO_NAME** to the microservice you. The script will **build the docker image, push the docker image to ECR and clear build images**. This process will take around ~2 minutes.
 ```
 # Change this to the repository name that was used in step 1.1
 export ECR_REPO_NAME=user-service
@@ -45,24 +43,18 @@ docker image prune -a -f
 docker builder prune -f
 
 ```
-6. Once it is done, click on the repository name and click on **Copy URI**. You will need the URI for the next portion.
+8. Once it is done, click on the repository name and click on **Copy URI**. You will need the URI for the next portion.
+
 # Creating an ECS task definition
 1. Go to Amazon Elastic Container Service, then go to **Task definitions**.
 2. Click on '**Create new task definition**'.
-<br>
-2.1. **Task definition family**: user-service-task *(change based on the service)*
-<br>
-2.2. **Launch type**: AWS Fargate
-<br>
-2.2. **CPU**: .25 vCPU and **Memory**: .5 GB *(You will need to select the both options multiple times to be able to set .25 vCPU and .5GB)*
-<br>
-2.3. **Task role**: LabRole *(for students)* and **Task execution role**: LabRole *(for students)*
-<br>
-2.4. **Container details name**: user-service *(change based on the service)*
-<br>
-2.5. **Port mappings (Container port)**: 8080
-<br>
-2.6. **Environment variables**:
+3. **Task definition family**: user-service-task *(change based on the service)*
+4. **Launch type**: AWS Fargate
+5. **CPU**: .25 vCPU and **Memory**: .5 GB *(You will need to select the both options multiple times to be able to set .25 vCPU and .5GB)*
+6. **Task role**: LabRole *(for students)* and **Task execution role**: LabRole *(for students)*
+7. **Container details name**: user-service *(change based on the service)*
+8. **Port mappings (Container port)**: 8080
+9. **Environment variables**:
 
 **For all services**
 - AWS_REGION: us-east-1
@@ -107,20 +99,13 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 # Running the Service using the Task Definition
 1. On the left menu, select **Task definitions**.
 2. Select the task definition you want to deploy and click on **Deploy** then **Create service**.
-<br>
-2.1. **Task definition revision**: Select the one with the (LATEST) name
-<br>
-2.2. **Service name**: ANY_NAME
-<br>
-2.3. **Existing cluster**: The cluster that was just created.
-<br>
-2.4. **Compute options**: Launch type, leave the rest default.
-<br>
-2.5. **Desired tasks**: Set the value to how many availability zones you have.
-<br>
-2.6. *(Optional)* **Load balancing**: Set it to your internal ALB.
-<br>
-2.7. *(Optional)* Under **Service auto-scaling**:
+3. **Task definition revision**: Select the one with the (LATEST) name
+4. **Service name**: ANY_NAME
+5. **Existing cluster**: The cluster that was just created.
+6. **Compute options**: Launch type, leave the rest default.
+7. **Desired tasks**: Set the value to how many availability zones you have.
+8. *(Optional)* **Load balancing**: Set it to your internal ALB.
+9. *(Optional)* Under **Service auto-scaling**:
 - **Minimum number of task**: 1
 - **Maximum number of tasks**: Set to the number of multi-AZ you have.
 - **Policy name**: Any name
@@ -128,8 +113,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 - **Target value**: 75
 - **Scale-out cooldown period**: 300
 - **Scale-in cooldown period**: 300
-<br><br>
-2.8. Click on '**Create**'.
+10. Click on '**Create**'.
 
 The deployment process will take about ~2 minutes.
 
