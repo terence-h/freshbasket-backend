@@ -8,8 +8,11 @@
 
 # Building/Pushing Docker Image to Amazon ECR
 1. Go to Amazon ECR and create a repository
-2. **Repository Name**: user-service *(The name will be used in further steps so keep in mind)*
-3. *(Optional)* Under **Encryption Settings**, use **AWS KMS** if you wish to encrypt using AWS KMS instead of the default AES-256 encryption.
+2. Use the following settings *(if not mentioned, leave as default)*:
+    | Option | Value |
+    |---|---|
+    | Repository Name | user-service *(The name will be used in further steps so keep in mind)* |
+    | *(Optional)* Encryption Settings | AWS KMS or leave as default |
 4. Click on '**Create**'.
 5. Open CloudShell *(bottom left of the browser)*
 6. Run the script below to clone the git repository to CloudShell.
@@ -48,72 +51,98 @@ docker builder prune -f
 # Creating an ECS task definition
 1. Go to Amazon Elastic Container Service, then go to **Task definitions**.
 2. Click on '**Create new task definition**'.
-3. **Task definition family**: user-service-task *(change based on the service)*
-4. **Launch type**: AWS Fargate
-5. **CPU**: .25 vCPU and **Memory**: .5 GB *(You will need to select the both options multiple times to be able to set .25 vCPU and .5GB)*
-6. **Task role**: LabRole *(for students)* and **Task execution role**: LabRole *(for students)*
-7. **Container details name**: user-service *(change based on the service)*
-8. **Port mappings (Container port)**: 8080
-9. **Environment variables**:
+3. Use the following settings *(if not mentioned, leave as default)*:
+    | Option | Value |
+    |---|---|
+    | Task definition family | user-service-task *(change based on the service)* |
+    | Launch type | AWS Fargate |
+    | CPU | .25 vCPU *(you will need to select CPU then Memory then back to CPU to get .25 vCPU option)* |
+    | Memory | .5 GB *(you will need to select CPU then Memory then back to CPU to get .5 GB option)* |
+    | Task role | Any role with ECS permissions or LabRole *(for students)* |
+    | Task execution role | Any role with ECS task execution or LabRole *(for students)* |
+    | Container details name | user-service *(change based on the service)* |
+    | Port mappings (Container port) | 8080 |
+    | Launch type | AWS Fargate |
 
-**For all services**
-- AWS_REGION: us-east-1
-- ASPNETCORE_ENVIRONMENT: Production
-- ASPNETCORE_URLS: http://+:8080
+    **Environment Variables**:
 
-**Only for Product and Order service**
-- USER_SERVICE_BASE_URL: YOUR_INTERNAL_ALB_DNS/your_listener_route_to_user_service
+    **For all services**
+    | Key | Value |
+    |---|---|
+    | AWS_REGION | us-east-1 |
+    | ASPNETCORE_ENVIRONMENT | Production |
+    | ASPNETCORE_URLS | http://+:8080 |
 
-**Only for User service**
-- DYNAMODB_TABLE_NAME: Users
-- JWT_AUDIENCE: UserServiceClients
-- JWT_ISSUER: UserService
-- JWT_EXPIRY_MINS: 10800
-- JWT_SECRET_KEY: b53b62055183181a4ec326f815a9759dd184d8bb3c67fb12c502651f11772499
+    **Only for Product and Order service**
+    | Key | Value |
+    |---|---|
+    | USER_SERVICE_BASE_URL | YOUR_INTERNAL_ALB_DNS/your_listener_route_to_user_service |
 
-NOTE: You should generate JWT_SECRET_KEY yourself, a sample key is provided only for testing purposes. If you have Node.js installed locally, you can use the script below in command prompt:
-```
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
-**Only for Product service**
-- PRODUCTS_TABLE_NAME: Products
-- CATEGORIES_TABLE_NAME: Categories
-- S3_BUCKET_NAME: YOUR_S3_BUCKET_NAME_TO_STORE_PRODUCT_IMAGES
+    **Only for User service**
+    | Key | Value |
+    |---|---|
+    | DYNAMODB_TABLE_NAME | Users |
+    | JWT_AUDIENCE | UserServiceClients |
+    | JWT_ISSUER | UserService |
+    | JWT_EXPIRY_MINS | 10800 |
+    | JWT_SECRET_KEY | b53b62055183181a4ec326f815a9759dd184d8bb3c67fb12c502651f11772499 |
 
-**Only for Order service**
-- DYNAMODB_TABLE_NAME: Orders
-- SQS_QUEUE_URL: YOUR_SQS_QUEUE_URL
-- SNS_QUEUE_URL: YOUR_SNS_QUEUE_URL
-- SNS_TOPIC_ARN: YOUR_SNS_TOPIC_ARN
+    NOTE: You should generate JWT_SECRET_KEY yourself, a sample key is provided only for testing purposes. If you have Node.js installed locally, you can use the script below in command prompt:
+    ```
+    node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+    ```
+    **Only for Product service**
+    | Key | Value |
+    |---|---|
+    | PRODUCTS_TABLE_NAME | Products |
+    | CATEGORIES_TABLE_NAME | Categories |
+    | S3_BUCKET_NAME | YOUR_S3_BUCKET_NAME_TO_STORE_PRODUCT_IMAGES |
+
+    **Only for Order service**
+    | Key | Value |
+    |---|---|
+    | DYNAMODB_TABLE_NAME | Orders |
+    | SQS_QUEUE_URL | YOUR_SQS_QUEUE_URL |
+    | SNS_QUEUE_URL | YOUR_SNS_QUEUE_URL |
+    | SNS_TOPIC_ARN | YOUR_SNS_TOPIC_ARN |
 
 3. Click on '**Create**'.
 
 # Creating a ECS Cluster
 1. On the left menu, click on **Clusters** then **Create cluster**.
-2. **Cluster name**: freshbasket *(or any desired name)*.
-3. Under Infrastructure, use **AWS Fargate (serverless)**.
-4. Under Monitoring, select **Container Insights with enhanced observability** to get more detailed health and performance metrics.
-5. *(Optional)* Under Encryption, use an AWS KMS key to encrypt the storage.
-6. Click on '**Create**'.
+2. Use the following settings *(if not mentioned, leave as default)*:
+    | Option | Value |
+    |---|---|
+    | Cluster name | freshbasket *(or any desired name)* |
+    | In Infrastructure | AWS Fargate (serverless) |
+    | In Monitoring | Container Insights with enhanced observability |
+    | *(Optional)* In Encryption | AWS KMS |
+3. Click on '**Create**'.
 
-# Running the Service using the Task Definition
+# Running the Service using the Task Definition created
 1. On the left menu, select **Task definitions**.
 2. Select the task definition you want to deploy and click on **Deploy** then **Create service**.
-3. **Task definition revision**: Select the one with the (LATEST) name
-4. **Service name**: ANY_NAME
-5. **Existing cluster**: The cluster that was just created.
-6. **Compute options**: Launch type, leave the rest default.
-7. **Desired tasks**: Set the value to how many availability zones you have.
-8. *(Optional)* **Load balancing**: Set it to your internal ALB.
-9. *(Optional)* Under **Service auto-scaling**:
-- **Minimum number of task**: 1
-- **Maximum number of tasks**: Set to the number of multi-AZ you have.
-- **Policy name**: Any name
-- **ECS service metric**: ECSServiceAverageCPUUtilization
-- **Target value**: 75
-- **Scale-out cooldown period**: 300
-- **Scale-in cooldown period**: 300
-10. Click on '**Create**'.
+3. Use the following settings *(if not mentioned, leave as default)*:
+    | Option | Value |
+    |---|---|
+    | Task definition revision | Select the one with the (LATEST) name |
+    | Service name | Any name |
+    | Existing cluster | The cluster that was just created. |
+    | Compute options | Launch type |
+    | Desired tasks | Set the value to how many availability zones you have. |
+    | *(Optional)* Load balancing | Set it to your internal ALB. |
+    
+    ***(Optional)* In Service auto-scaling**
+    | Option | Value |
+    |---|---|
+    | Minimum number of tasks | 1 |
+    | Maximum number of tasks | Set to the number of multi-AZ you have. |
+    | Policy name | Any name |
+    | ECS service metric | ECSServiceAverageCPUUtilization |
+    | Target value | 70 |
+    | Scale-out cooldown period | 300 |
+    | Scale-in cooldown period | 300 |
+4. Click on '**Create**'.
 
 The deployment process will take about ~2 minutes.
 
