@@ -19,13 +19,11 @@
 ```
 git clone -b develop https://github.com/terence-h/freshbasket-backend.git
 
-# Change 'SERVICE_NAME_HERE' to the service you want to deploy
 # Valid services: User.Service, Product.Service, Order.Service
 cd freshbasket-backend/User.Service
 
 ```
 5. In the script provided below, change **ECR_REPO_NAME** to the microservice you. The script will **build the docker image, push the docker image to ECR and clear build images**. This process will take around ~2 minutes.
-<br>
 ```
 # Change this to the repository name that was used in step 1.1
 export ECR_REPO_NAME=user-service
@@ -47,7 +45,6 @@ docker image prune -a -f
 docker builder prune -f
 
 ```
-
 6. Once it is done, click on the repository name and click on **Copy URI**. You will need the URI for the next portion.
 # Creating an ECS task definition
 1. Go to Amazon Elastic Container Service, then go to **Task definitions**.
@@ -86,7 +83,6 @@ NOTE: You should generate JWT_SECRET_KEY yourself, a sample key is provided only
 ```
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
-
 **Only for Product service**
 - PRODUCTS_TABLE_NAME: Products
 - CATEGORIES_TABLE_NAME: Categories
